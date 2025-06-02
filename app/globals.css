@@ -1,0 +1,96 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 3%;
+    --foreground: 0 0% 98%;
+
+    --card: 0 0% 5%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 5%;
+    --popover-foreground: 0 0% 98%;
+
+    --primary: 270 100% 50%;
+    --primary-foreground: 0 0% 98%;
+
+    --secondary: 180 100% 50%;
+    --secondary-foreground: 0 0% 9%;
+
+    --muted: 0 0% 15%;
+    --muted-foreground: 0 0% 65%;
+
+    --accent: 310 100% 50%;
+    --accent-foreground: 0 0% 98%;
+
+    --destructive: 0 100% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 270 100% 50%;
+
+    --radius: 0.75rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+.neon-text {
+  text-shadow: 0 0 5px theme("colors.purple.500"), 0 0 10px theme("colors.purple.500"), 0 0 20px
+    theme("colors.purple.500");
+}
+
+.neon-border {
+  box-shadow: 0 0 5px theme("colors.purple.500"), 0 0 10px theme("colors.purple.500"), inset 0 0 5px
+    theme("colors.purple.500");
+}
+
+.neon-cyan {
+  text-shadow: 0 0 5px theme("colors.cyan.500"), 0 0 10px theme("colors.cyan.500"), 0 0 20px theme("colors.cyan.500");
+}
+
+.neon-border-cyan {
+  box-shadow: 0 0 5px theme("colors.cyan.500"), 0 0 10px theme("colors.cyan.500"), inset 0 0 5px
+    theme("colors.cyan.500");
+}
+
+.neon-pink {
+  text-shadow: 0 0 5px theme("colors.pink.500"), 0 0 10px theme("colors.pink.500"), 0 0 20px theme("colors.pink.500");
+}
+
+.neon-border-pink {
+  box-shadow: 0 0 5px theme("colors.pink.500"), 0 0 10px theme("colors.pink.500"), inset 0 0 5px
+    theme("colors.pink.500");
+}
+
+.coin-side {
+  backface-visibility: hidden;
+}
+
+.coin-back {
+  transform: rotateY(180deg);
+}
+
+.grid-pattern {
+  background-image: linear-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+
+.perspective-1000 {
+  perspective: 1000px;
+}
+
+.preserve-3d {
+  transform-style: preserve-3d;
+}
