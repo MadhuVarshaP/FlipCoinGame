@@ -72,16 +72,17 @@ export default function StakeInput({ value, onChange, disabled }) {
       </div>
 
       <div className="mt-4 px-1">
-        <Slider
-          defaultValue={[0.01]}
-          min={0.01}
-          max={1}
-          step={0.01}
-          value={[Number.parseFloat(value)]}
-          onValueChange={handleSliderChange}
-          disabled={disabled}
-          className="py-2"
-        />
+   <Slider
+  defaultValue={[0.01]}
+  min={0.01}
+  max={1}
+  step={0.01}
+  value={[Number.parseFloat(value)]}
+  onValueChange={handleSliderChange}
+  disabled={disabled}
+  className="py-2 [&>*:first-child>*]:bg-white [&>*:last-child]:border-white"
+/>
+
         <div className="flex justify-between text-xs text-gray-500 mt-1">
           <span>0.01</span>
           <span>0.5</span>

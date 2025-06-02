@@ -27,12 +27,12 @@ export default function FlipCard({ isFlipping, resultSide }) {
       >
         {/* Heads */}
         <div className="coin-side absolute h-full w-full rounded-full bg-gradient-to-b from-yellow-300 to-yellow-500 border-8 border-yellow-600 flex items-center justify-center shadow-lg">
-          <div className="text-yellow-800 text-2xl font-bold">H</div>
+          <div className="text-yellow-800 text-5xl font-bold">H</div>
         </div>
 
         {/* Tails */}
         <div className="coin-side coin-back absolute h-full w-full rounded-full bg-gradient-to-b from-yellow-400 to-yellow-600 border-8 border-yellow-700 flex items-center justify-center shadow-lg">
-          <div className="text-yellow-900 text-2xl font-bold">T</div>
+          <div className="text-yellow-900 text-5xl font-bold">T</div>
         </div>
       </motion.div>
 
