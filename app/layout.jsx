@@ -7,6 +7,7 @@ const lexend = Lexend({ subsets: ["latin"] });
 export const metadata = {
   title: "Flip-a-Coin | Stake ETH. Flip Fate.",
   description: "A Web3 coin flip game where you can stake ETH and test your luck.",
+  url: "http://localhost:3000",
 };
 
 export default function RootLayout({ children }) {

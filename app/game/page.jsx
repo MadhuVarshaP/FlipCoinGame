@@ -5,6 +5,10 @@ import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { usePrivy } from "@privy-io/react-auth"
 import { useToast } from "@/components/ui/use-toast"
+import { useWriteContract, useWaitForTransactionReceipt, useWatchContractEvent, useAccount } from "wagmi"
+import { parseEther } from "viem"
+import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/lib/contract"
+
 import Navbar from "@/components/navbar"
 import FlipCard from "@/components/flip-card"
 import StakeInput from "@/components/stake-input"
@@ -18,20 +22,18 @@ import WalletBalance from "@/components/wallet-balance"
 export default function GamePage() {
   const router = useRouter()
   const { authenticated, ready } = usePrivy()
+  const { address } = useAccount()
   const { toast } = useToast()
+
   const [mounted, setMounted] = useState(false)
-  const [choice, setChoice] = useState(null) // "heads" or "tails"
+  const [choice, setChoice] = useState(null)
   const [stakeAmount, setStakeAmount] = useState("0.01")
   const [isFlipping, setIsFlipping] = useState(false)
   const [showResult, setShowResult] = useState(false)
-  const [result, setResult] = useState(null) // "win" or "lose"
-  const [resultCoinSide, setResultCoinSide] = useState(null) // "heads" or "tails"
-  const [gameStats, setGameStats] = useState({
-    totalGames: 5,
-    wins: 3,
-    totalStaked: 0.25,
-    netProfit: 0.05,
-  })
+  const [result, setResult] = useState(null)
+  const [resultCoinSide, setResultCoinSide] = useState(null)
+  const [txHash, setTxHash] = useState(null)
+  const [gameStats, setGameStats] = useState({ totalGames: 5, wins: 3, totalStaked: 0.25, netProfit: 0.05 })
 
   useEffect(() => {
     setMounted(true)
@@ -40,52 +42,78 @@ export default function GamePage() {
     }
   }, [authenticated, ready, router])
 
-  const handleFlip = () => {
+  const { writeContractAsync } = useWriteContract()
+
+useWaitForTransactionReceipt({
+  hash: txHash,
+  onSuccess() {
+    console.log("Transaction confirmed", txHash)
+    setIsFlipping(false)
+  },
+  onError(error) {
+    console.error("Transaction error:", error)
+    setIsFlipping(false)
+    toast({ title: "Transaction failed", description: error.message, variant: "destructive" })
+  },
+})
+
+useWatchContractEvent({
+  address: CONTRACT_ADDRESS,
+  abi: CONTRACT_ABI,
+  eventName: "GamePlayed",
+  onLogs(logs) {
+    console.log("GamePlayed event logs:", logs)
+    if (!logs.length) return
+    const [player, choiceNum, resultNum, win, reward] = logs[0].args
+    if (player.toLowerCase() !== address?.toLowerCase()) {
+      console.log("Ignoring event from other player", player)
+      return
+    }
+
+    setResult(win ? "win" : "lose")
+    setResultCoinSide(resultNum === 0 ? "heads" : "tails")
+    setIsFlipping(false)
+    setShowResult(true)
+
+    if (typeof window !== "undefined") {
+      if (win && window.playWinSound) window.playWinSound()
+      else if (!win && window.playLoseSound) window.playLoseSound()
+    }
+  },
+})
+
+
+  const handleFlip = async () => {
     if (!choice) {
-      toast({
-        title: "Choose a side",
-        description: "Please select Heads or Tails first",
-        variant: "destructive",
-      })
+      toast({ title: "Choose a side", description: "Please select Heads or Tails first", variant: "destructive" })
       return
     }
 
     if (Number.parseFloat(stakeAmount) < 0.01) {
-      toast({
-        title: "Invalid stake",
-        description: "Minimum stake is 0.01 ETH",
-        variant: "destructive",
-      })
+      toast({ title: "Invalid stake", description: "Minimum stake is 0.01 ETH", variant: "destructive" })
       return
     }
 
-    setIsFlipping(true)
-
-    // Play flip sound
-    if (typeof window !== "undefined" && window.playFlipSound) {
-      window.playFlipSound()
-    }
-
-    // Simulate blockchain transaction
-    setTimeout(() => {
-      // Random result (50% chance)
-      const flipResult = Math.random() > 0.5 ? "heads" : "tails"
-      const userWon = flipResult === choice
-
-      setResultCoinSide(flipResult)
-      setResult(userWon ? "win" : "lose")
-      setIsFlipping(false)
-      setShowResult(true)
-
-      // Play result sound
-      if (typeof window !== "undefined") {
-        if (userWon && window.playWinSound) {
-          window.playWinSound()
-        } else if (!userWon && window.playLoseSound) {
-          window.playLoseSound()
-        }
+    try {
+      setIsFlipping(true)
+      if (typeof window !== "undefined" && window.playFlipSound) {
+        window.playFlipSound()
       }
-    }, 3000)
+
+      const tx = await writeContractAsync({
+        address: CONTRACT_ADDRESS,
+        abi: CONTRACT_ABI,
+        functionName: "playGame",
+        args: [choice === "heads" ? 0 : 1],
+        value: parseEther(stakeAmount),
+      })
+
+      setTxHash(tx.hash)
+    } catch (err) {
+      console.error(err)
+      setIsFlipping(false)
+      toast({ title: "Transaction failed", description: err.message, variant: "destructive" })
+    }
   }
 
   const resetGame = () => {
