@@ -15,7 +15,6 @@ import ChoiceButtons from "@/components/choice-buttons"
 import FlipResultModal from "@/components/flip-result-modal"
 import LoadingSpinner from "@/components/loading-spinner"
 import BackgroundGrid from "@/components/background-grid"
-import GameStats from "@/components/game-stats"
 import WalletBalance from "@/components/wallet-balance"
 
 export default function GamePage() {
@@ -109,6 +108,7 @@ export default function GamePage() {
           
           setResult(win ? "win" : "lose")
           setResultCoinSide(resultCoinSide)
+          setTxHash(txHash)
           setIsFlipping(false)
           setShowResult(true)
 
@@ -124,6 +124,7 @@ export default function GamePage() {
           // Fallback to showing a generic result
           setResult("lose")
           setResultCoinSide("heads")
+          setTxHash(txHash)
           setIsFlipping(false)
           setShowResult(true)
         }
@@ -132,6 +133,7 @@ export default function GamePage() {
         // Fallback
         setResult("lose")
         setResultCoinSide("heads")
+        setTxHash(txHash)
         setIsFlipping(false)
         setShowResult(true)
       }
@@ -256,6 +258,7 @@ export default function GamePage() {
     setShowResult(false)
     setResult(null)
     setResultCoinSide(null)
+    setTxHash(null)
   }
 
   if (!mounted || !ready || !authenticated) return null
@@ -328,6 +331,7 @@ export default function GamePage() {
           result={result}
           stakeAmount={stakeAmount}
           onClose={resetGame}
+          txHash={txHash}
         />
       )}
     </div>

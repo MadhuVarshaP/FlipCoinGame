@@ -2,10 +2,10 @@
 
 import { useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { CheckCircle, XCircle, Repeat } from "lucide-react"
+import { CheckCircle, XCircle, Repeat, ExternalLink } from "lucide-react"
 import confetti from "canvas-confetti"
 
-export default function FlipResultModal({ result, stakeAmount, onClose }) {
+export default function FlipResultModal({ result, stakeAmount, onClose, txHash }) {
   const isWin = result === "win"
 
   useEffect(() => {
@@ -17,6 +17,13 @@ export default function FlipResultModal({ result, stakeAmount, onClose }) {
       })
     }
   }, [isWin])
+
+  const openInExplorer = () => {
+    if (txHash) {
+      const explorerUrl = `https://sepolia.etherscan.io/tx/${txHash}`
+      window.open(explorerUrl, '_blank')
+    }
+  }
 
   return (
     <AnimatePresence>
@@ -82,7 +89,20 @@ export default function FlipResultModal({ result, stakeAmount, onClose }) {
                 Play Again
               </motion.button>
 
-          
+              {txHash && (
+                <motion.button
+                  className="w-full px-4 py-3 rounded-lg font-medium flex items-center justify-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-300 border border-gray-600"
+                  onClick={openInExplorer}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.6 }}
+                >
+                  <ExternalLink className="h-4 w-4" />
+                  View on Etherscan
+                </motion.button>
+              )}
             </div>
           </div>
         </motion.div>
