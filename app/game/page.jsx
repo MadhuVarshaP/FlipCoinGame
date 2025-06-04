@@ -19,7 +19,7 @@ import WalletBalance from "@/components/wallet-balance"
 
 export default function GamePage() {
   const router = useRouter()
-  const { ready, authenticated, user, createWallet } = usePrivy()
+  const { ready, authenticated, createWallet } = usePrivy()
   const { wallets } = useWallets()
   const { toast } = useToast()
 
@@ -31,14 +31,6 @@ export default function GamePage() {
   const [result, setResult] = useState(null)
   const [resultCoinSide, setResultCoinSide] = useState(null)
   const [txHash, setTxHash] = useState(null)
-  const [gameStats, setGameStats] = useState({
-    totalGames: 5,
-    wins: 3,
-    totalStaked: 0.25,
-    netProfit: 0.05,
-  })
-
-  const userAddress = wallets.length > 0 ? wallets[0].address : null
 
   useEffect(() => {
     setMounted(true)
@@ -165,7 +157,7 @@ export default function GamePage() {
           params: [txHash],
         })
         if (receipt) break
-      } catch (error) {
+      } catch {
         // Transaction not yet mined
       }
       await new Promise(resolve => setTimeout(resolve, 1000)) // Wait 1 second

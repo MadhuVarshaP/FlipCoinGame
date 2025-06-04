@@ -4,13 +4,6 @@ import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 
 export default function FlipCard({ isFlipping, resultSide }) {
-  const [flipCount, setFlipCount] = useState(0)
-
-  useEffect(() => {
-    if (isFlipping) {
-      setFlipCount((prev) => prev + 1)
-    }
-  }, [isFlipping])
 
   return (
     <div className="perspective-1000 relative h-48 w-48" style={{ perspective: "1000px" }}>

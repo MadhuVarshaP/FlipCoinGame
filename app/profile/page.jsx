@@ -61,7 +61,7 @@ export default function ProfilePage() {
     if (ready && authenticated && wallets.length) {
       fetchWalletBalance()
     }
-  }, [ready, authenticated, wallets.length])
+  }, [ready, authenticated, wallets.length, fetchWalletBalance])
 
   // Debug: Log user and wallet data
   useEffect(() => {
@@ -79,7 +79,7 @@ export default function ProfilePage() {
         title: "Copied!",
         description: "Address copied to clipboard",
       })
-    } catch (err) {
+    } catch {
       toast({
         title: "Failed to copy",
         description: "Could not copy address to clipboard",
@@ -99,7 +99,7 @@ export default function ProfilePage() {
   const handleExportWallet = async () => {
     try {
       await exportWallet()
-    } catch (error) {
+    } catch {
       toast({
         title: "Export failed",
         description: "Could not export wallet",
@@ -126,16 +126,6 @@ export default function ProfilePage() {
       return { status: "External Wallet", color: "text-purple-400" }
     }
   }
-  
-  const walletStatus = getWalletConnectionStatus()
-  
-  // Format address for display
-  const formatAddress = (address) => {
-    if (!address) return "N/A"
-    return `${address.slice(0, 6)}...${address.slice(-4)}`
-  }
-
-
 
   return (
     <div className="min-h-screen bg-black text-white">
