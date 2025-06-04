@@ -20,7 +20,7 @@ export default function FlipResultModal({ result, stakeAmount, onClose, txHash }
 
   const openInExplorer = () => {
     if (txHash) {
-      const explorerUrl = `https://sepolia.etherscan.io/tx/${txHash}`
+      const explorerUrl = `https://sepolia.basescan.org/tx/${txHash}`
       window.open(explorerUrl, '_blank')
     }
   }

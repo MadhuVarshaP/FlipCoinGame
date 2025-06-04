@@ -89,7 +89,7 @@ export default function ProfilePage() {
   }
 
   const openInExplorer = (addressOrTx, type = 'address') => {
-    const baseUrl = 'https://sepolia.etherscan.io'
+    const baseUrl = 'https://sepolia.basescan.org'
     const explorerUrl = type === 'tx' 
       ? `${baseUrl}/tx/${addressOrTx}`
       : `${baseUrl}/address/${addressOrTx}`
