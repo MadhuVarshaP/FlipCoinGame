@@ -73,6 +73,15 @@
     theme("colors.pink.500");
 }
 
+.neon-green {
+  text-shadow: 0 0 5px theme("colors.green.500"), 0 0 10px theme("colors.green.500"), 0 0 20px theme("colors.green.500");
+}
+
+.neon-border-green {
+  box-shadow: 0 0 5px theme("colors.green.500"), 0 0 10px theme("colors.green.500"), inset 0 0 5px
+    theme("colors.green.500");
+}
+
 .coin-side {
   backface-visibility: hidden;
 }

@@ -3,7 +3,11 @@
 import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
-import { usePrivy } from "@privy-io/react-auth"
+import { usePrivy, useWallets } from "@privy-io/react-auth"
+import { formatEther } from "viem"
+import { Copy, ExternalLink, RefreshCw } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { useToast } from "@/components/ui/use-toast"
 import Navbar from "@/components/navbar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Progress } from "@/components/ui/progress"
@@ -20,8 +24,12 @@ const mockGameHistory = [
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { authenticated, ready, user } = usePrivy()
+  const { authenticated, ready, user, exportWallet } = usePrivy()
+  const { wallets } = useWallets()
+  const { toast } = useToast()
   const [mounted, setMounted] = useState(false)
+  const [walletBalance, setWalletBalance] = useState(null)
+  const [isLoadingBalance, setIsLoadingBalance] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -30,7 +38,76 @@ export default function ProfilePage() {
     }
   }, [authenticated, ready, router])
 
+  // Fetch wallet balance
+  const fetchWalletBalance = async () => {
+    if (!wallets.length) return
+    
+    setIsLoadingBalance(true)
+    try {
+      const wallet = wallets[0]
+      const provider = await wallet.getEthereumProvider()
+      
+      const balanceHex = await provider.request({
+        method: "eth_getBalance",
+        params: [wallet.address, "latest"],
+      })
+      
+      const balanceWei = BigInt(balanceHex)
+      setWalletBalance(balanceWei)
+    } catch (error) {
+      console.error("Error fetching wallet balance:", error)
+    } finally {
+      setIsLoadingBalance(false)
+    }
+  }
+
+  useEffect(() => {
+    if (ready && authenticated && wallets.length) {
+      fetchWalletBalance()
+    }
+  }, [ready, authenticated, wallets.length])
+
+  // Utility functions
+  const copyToClipboard = async (text) => {
+    try {
+      await navigator.clipboard.writeText(text)
+      toast({
+        title: "Copied!",
+        description: "Address copied to clipboard",
+      })
+    } catch (err) {
+      toast({
+        title: "Failed to copy",
+        description: "Could not copy address to clipboard",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const openInExplorer = (addressOrTx, type = 'address') => {
+    const baseUrl = 'https://sepolia.etherscan.io'
+    const explorerUrl = type === 'tx' 
+      ? `${baseUrl}/tx/${addressOrTx}`
+      : `${baseUrl}/address/${addressOrTx}`
+    window.open(explorerUrl, '_blank')
+  }
+
+  const handleExportWallet = async () => {
+    try {
+      await exportWallet()
+    } catch (error) {
+      toast({
+        title: "Export failed",
+        description: "Could not export wallet",
+        variant: "destructive",
+      })
+    }
+  }
+
   if (!mounted || !ready || !authenticated) return null
+
+  const walletAddress = wallets.length > 0 ? wallets[0].address : null
+  const formattedBalance = walletBalance ? parseFloat(formatEther(walletBalance)).toFixed(4) : "0.0000"
 
   // Calculate stats
   const totalGames = mockGameHistory.length
@@ -64,18 +141,114 @@ export default function ProfilePage() {
             Your Profile
           </motion.h1>
 
+          {/* User Info Section */}
+          <div className="mb-8">
+            <Card className="bg-gray-900 border border-green-900 neon-border-green">
+              <CardHeader>
+                <CardTitle className="text-green-300">User Information</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm text-gray-400">Email</p>
+                    <p className="font-medium mt-1">
+                      {user?.email?.address || "Not provided"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">User ID</p>
+                    <p className="font-mono text-sm mt-1 truncate">
+                      {user?.id || "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Created At</p>
+                    <p className="text-sm mt-1">
+                      {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-400">Wallet Type</p>
+                    <p className="text-sm mt-1 text-green-400">
+                      {wallets.length > 0 ? "Embedded Wallet" : "No Wallet"}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <Card className="bg-gray-900 border border-purple-900 neon-border">
               <CardHeader>
                 <CardTitle className="text-purple-300">Wallet</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-400">Connected Address</p>
-                <p className="font-mono text-sm truncate mt-1">{user?.wallet?.address || "No wallet connected"}</p>
+                <div className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-400">Connected Address</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="font-mono text-sm truncate flex-1">
+                        {walletAddress || "No wallet connected"}
+                      </p>
+                      {walletAddress && (
+                        <div className="flex gap-1">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => copyToClipboard(walletAddress)}
+                            className="h-6 w-6 p-0 text-purple-400 hover:text-purple-300"
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            onClick={() => openInExplorer(walletAddress)}
+                            className="h-6 w-6 p-0 text-purple-400 hover:text-purple-300"
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        </div>
+                      )}
+                    </div>
+                  </div>
 
-                <div className="mt-4">
-                  <p className="text-sm text-gray-400">Balance</p>
-                  <p className="text-xl font-bold mt-1">1.245 ETH</p>
+                  <div>
+                    <p className="text-sm text-gray-400">Balance</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <p className="text-xl font-bold">
+                        {isLoadingBalance ? "Loading..." : `${formattedBalance} ETH`}
+                      </p>
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={fetchWalletBalance}
+                        disabled={isLoadingBalance}
+                        className="h-6 w-6 p-0 text-purple-400 hover:text-purple-300"
+                      >
+                        <RefreshCw className={`h-3 w-3 ${isLoadingBalance ? 'animate-spin' : ''}`} />
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div>
+                    <p className="text-sm text-gray-400">Network</p>
+                    <p className="text-sm font-bold mt-1 text-cyan-400">Sepolia Testnet</p>
+                  </div>
+
+                  {walletAddress && (
+                    <div className="pt-2">
+                      <Button
+                        onClick={handleExportWallet}
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-purple-700 text-purple-300 hover:bg-purple-900/20"
+                      >
+                        Export Private Key
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </CardContent>
             </Card>

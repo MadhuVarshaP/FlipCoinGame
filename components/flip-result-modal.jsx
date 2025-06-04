@@ -63,7 +63,7 @@ export default function FlipResultModal({ result, stakeAmount, onClose }) {
               transition={{ delay: 0.4 }}
             >
               {isWin
-                ? `You've won ${(Number.parseFloat(stakeAmount) * 2).toFixed(2)} ETH!`
+                ? `You've won ${(Number.parseFloat(stakeAmount) * 3/2).toFixed(4)} ETH!`
                 : `You've lost ${stakeAmount} ETH.`}
             </motion.p>
 

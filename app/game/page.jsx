@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation"
 import { motion } from "framer-motion"
 import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { useToast } from "@/components/ui/use-toast"
-import { parseEther, encodeFunctionData } from "viem"
+import { parseEther, encodeFunctionData, decodeEventLog } from "viem"
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from "@/lib/contract"
 
 import Navbar from "@/components/navbar"
@@ -81,6 +81,7 @@ export default function GamePage() {
       // Wait for transaction to be mined
       const receipt = await waitForTransactionReceipt(txHash)
       console.log("Transaction confirmed", txHash)
+      console.log("Transaction receipt:", receipt)
       
       // Parse events from the receipt
       const gamePlayedEvent = receipt.logs.find(log => 
@@ -88,20 +89,51 @@ export default function GamePage() {
       )
       
       if (gamePlayedEvent) {
-        // Decode the event data (simplified - you might need to properly decode based on your ABI)
-        // For now, we'll simulate the result
-        const win = Math.random() > 0.5 // Temporary - replace with actual event parsing
-        const resultNum = Math.floor(Math.random() * 2)
+        console.log("Found GamePlayed event:", gamePlayedEvent)
         
-        setResult(win ? "win" : "lose")
-        setResultCoinSide(resultNum === 0 ? "heads" : "tails")
+        try {
+          // Decode the GamePlayed event
+          const decodedEvent = decodeEventLog({
+            abi: CONTRACT_ABI,
+            data: gamePlayedEvent.data,
+            topics: gamePlayedEvent.topics,
+          })
+          
+          console.log("Decoded event:", decodedEvent)
+          
+          // Extract the win boolean and result choice from the event
+          const { win, result: resultChoice } = decodedEvent.args
+          
+          // Convert result choice (0 = heads, 1 = tails)
+          const resultCoinSide = resultChoice === 0 ? "heads" : "tails"
+          
+          setResult(win ? "win" : "lose")
+          setResultCoinSide(resultCoinSide)
+          setIsFlipping(false)
+          setShowResult(true)
+
+          if (typeof window !== "undefined") {
+            if (win && window.playWinSound) window.playWinSound()
+            else if (!win && window.playLoseSound) window.playLoseSound()
+          }
+          
+          console.log(`Game result: ${win ? "WIN" : "LOSE"}, Coin landed on: ${resultCoinSide}`)
+          
+        } catch (decodeError) {
+          console.error("Error decoding event:", decodeError)
+          // Fallback to showing a generic result
+          setResult("lose")
+          setResultCoinSide("heads")
+          setIsFlipping(false)
+          setShowResult(true)
+        }
+      } else {
+        console.error("GamePlayed event not found in transaction logs")
+        // Fallback
+        setResult("lose")
+        setResultCoinSide("heads")
         setIsFlipping(false)
         setShowResult(true)
-
-        if (typeof window !== "undefined") {
-          if (win && window.playWinSound) window.playWinSound()
-          else if (!win && window.playLoseSound) window.playLoseSound()
-        }
       }
     } catch (error) {
       console.error("Transaction error:", error)
@@ -155,10 +187,10 @@ export default function GamePage() {
       return
     }
 
-    if (Number.parseFloat(stakeAmount) < 0.01) {
+    if (Number.parseFloat(stakeAmount) < 0.000001) {
       toast({
         title: "Invalid stake",
-        description: "Minimum stake is 0.01 ETH",
+        description: "Minimum stake is 0.000001 ETH",
         variant: "destructive",
       })
       return
@@ -251,7 +283,7 @@ export default function GamePage() {
             Flip The Coin
           </motion.h1>
 
-          <GameStats stats={gameStats} />
+          {/* <GameStats stats={gameStats} /> */}
 
           <ChoiceButtons
             choice={choice}

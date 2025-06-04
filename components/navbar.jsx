@@ -60,7 +60,7 @@ export default function Navbar() {
                 {shortAddress}
               </Button>
             </DropdownMenuTrigger>
-            <DropdownMenuContent align="end" className="bg-gray-900 border-purple-900">
+            <DropdownMenuContent align="end" className=" p-1 bg-gray-900 border-purple-900">
               <DropdownMenuItem onClick={() => logout()} className="cursor-pointer">
                 Disconnect
               </DropdownMenuItem>
