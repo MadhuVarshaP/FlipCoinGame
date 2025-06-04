@@ -4,7 +4,7 @@ import { useState } from "react"
 import Link from "next/link"
 import { usePathname } from "next/navigation"
 import { motion } from "framer-motion"
-import { usePrivy } from "@privy-io/react-auth"
+import { usePrivy, useWallets } from "@privy-io/react-auth"
 import { Coins, User, Menu, X } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
@@ -12,9 +12,10 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigge
 export default function Navbar() {
   const pathname = usePathname()
   const { user, logout } = usePrivy()
+  const { wallets } = useWallets()
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
 
-  const walletAddress = user?.wallet?.address
+  const walletAddress = wallets.length > 0 ? wallets[0].address : null
   const shortAddress = walletAddress ? `${walletAddress.slice(0, 6)}...${walletAddress.slice(-4)}` : "Connect Wallet"
 
   const navItems = [
