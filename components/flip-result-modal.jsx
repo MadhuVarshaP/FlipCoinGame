@@ -100,7 +100,7 @@ export default function FlipResultModal({ result, stakeAmount, onClose, txHash }
                   transition={{ delay: 0.6 }}
                 >
                   <ExternalLink className="h-4 w-4" />
-                  View on Etherscan
+                  View on Basescan
                 </motion.button>
               )}
             </div>
