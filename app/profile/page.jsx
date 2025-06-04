@@ -10,17 +10,10 @@ import { Button } from "@/components/ui/button"
 import { useToast } from "@/components/ui/use-toast"
 import Navbar from "@/components/navbar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
-import { Progress } from "@/components/ui/progress"
+
 import BackgroundGrid from "@/components/background-grid"
 
-// Mock data - in a real app, this would come from your backend or blockchain events
-const mockGameHistory = [
-  { id: 1, date: "2023-06-01", choice: "heads", result: "heads", stake: "0.05", outcome: "win" },
-  { id: 2, date: "2023-06-01", choice: "tails", result: "heads", stake: "0.1", outcome: "lose" },
-  { id: 3, date: "2023-06-02", choice: "heads", result: "tails", stake: "0.02", outcome: "lose" },
-  { id: 4, date: "2023-06-03", choice: "tails", result: "tails", stake: "0.05", outcome: "win" },
-  { id: 5, date: "2023-06-04", choice: "heads", result: "heads", stake: "0.03", outcome: "win" },
-]
+
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -30,6 +23,7 @@ export default function ProfilePage() {
   const [mounted, setMounted] = useState(false)
   const [walletBalance, setWalletBalance] = useState(null)
   const [isLoadingBalance, setIsLoadingBalance] = useState(false)
+
 
   useEffect(() => {
     setMounted(true)
@@ -61,11 +55,21 @@ export default function ProfilePage() {
     }
   }
 
+
+
   useEffect(() => {
     if (ready && authenticated && wallets.length) {
       fetchWalletBalance()
     }
   }, [ready, authenticated, wallets.length])
+
+  // Debug: Log user and wallet data
+  useEffect(() => {
+    if (ready && authenticated) {
+      console.log("User data:", user)
+      console.log("Wallets data:", wallets)
+    }
+  }, [ready, authenticated, user, wallets])
 
   // Utility functions
   const copyToClipboard = async (text) => {
@@ -108,17 +112,30 @@ export default function ProfilePage() {
 
   const walletAddress = wallets.length > 0 ? wallets[0].address : null
   const formattedBalance = walletBalance ? parseFloat(formatEther(walletBalance)).toFixed(4) : "0.0000"
+  
+  // Get wallet connection details
+  const getWalletConnectionStatus = () => {
+    if (!wallets.length) return { status: "No Wallet", color: "text-red-400" }
+    
+    const wallet = wallets[0]
+    if (wallet.connectorType === "embedded") {
+      return { status: "Embedded Wallet", color: "text-green-400" }
+    } else if (wallet.connectorType === "injected") {
+      return { status: "Browser Wallet", color: "text-blue-400" }
+    } else {
+      return { status: "External Wallet", color: "text-purple-400" }
+    }
+  }
+  
+  const walletStatus = getWalletConnectionStatus()
+  
+  // Format address for display
+  const formatAddress = (address) => {
+    if (!address) return "N/A"
+    return `${address.slice(0, 6)}...${address.slice(-4)}`
+  }
 
-  // Calculate stats
-  const totalGames = mockGameHistory.length
-  const wins = mockGameHistory.filter((game) => game.outcome === "win").length
-  const winRate = totalGames > 0 ? (wins / totalGames) * 100 : 0
 
-  const totalStaked = mockGameHistory.reduce((sum, game) => sum + Number.parseFloat(game.stake), 0)
-  const totalWon = mockGameHistory
-    .filter((game) => game.outcome === "win")
-    .reduce((sum, game) => sum + Number.parseFloat(game.stake) * 2, 0)
-  const netProfit = totalWon - totalStaked
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -141,44 +158,7 @@ export default function ProfilePage() {
             Your Profile
           </motion.h1>
 
-          {/* User Info Section */}
-          <div className="mb-8">
-            <Card className="bg-gray-900 border border-green-900 neon-border-green">
-              <CardHeader>
-                <CardTitle className="text-green-300">User Information</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <p className="text-sm text-gray-400">Email</p>
-                    <p className="font-medium mt-1">
-                      {user?.email?.address || "Not provided"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">User ID</p>
-                    <p className="font-mono text-sm mt-1 truncate">
-                      {user?.id || "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Created At</p>
-                    <p className="text-sm mt-1">
-                      {user?.createdAt ? new Date(user.createdAt).toLocaleDateString() : "N/A"}
-                    </p>
-                  </div>
-                  <div>
-                    <p className="text-sm text-gray-400">Wallet Type</p>
-                    <p className="text-sm mt-1 text-green-400">
-                      {wallets.length > 0 ? "Embedded Wallet" : "No Wallet"}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+          <div className="max-w-md mx-auto">
             <Card className="bg-gray-900 border border-purple-900 neon-border">
               <CardHeader>
                 <CardTitle className="text-purple-300">Wallet</CardTitle>
@@ -238,7 +218,7 @@ export default function ProfilePage() {
                   </div>
 
                   {walletAddress && (
-                    <div className="pt-2">
+                    <div className="pt-2 space-y-2">
                       <Button
                         onClick={handleExportWallet}
                         variant="outline"
@@ -247,80 +227,21 @@ export default function ProfilePage() {
                       >
                         Export Private Key
                       </Button>
+                      <Button
+                        onClick={fetchWalletBalance}
+                        variant="outline"
+                        size="sm"
+                        className="w-full border-cyan-700 text-cyan-300 hover:bg-cyan-900/20"
+                        disabled={isLoadingBalance}
+                      >
+                        {isLoadingBalance ? "Refreshing..." : "Refresh Balance"}
+                      </Button>
                     </div>
                   )}
                 </div>
               </CardContent>
             </Card>
-
-            <Card className="bg-gray-900 border border-cyan-900 neon-border-cyan">
-              <CardHeader>
-                <CardTitle className="text-cyan-300">Game Stats</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm text-gray-400">Win Rate</span>
-                      <span className="text-sm font-bold">{winRate.toFixed(0)}%</span>
-                    </div>
-                    <Progress value={winRate} className="h-2 bg-gray-700" />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4 mt-4">
-                    <div>
-                      <p className="text-sm text-gray-400">Games Played</p>
-                      <p className="text-xl font-bold">{totalGames}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-gray-400">Net Profit</p>
-                      <p className={`text-xl font-bold ${netProfit >= 0 ? "text-green-500" : "text-red-500"}`}>
-                        {netProfit.toFixed(2)} ETH
-                      </p>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
           </div>
-
-          <Card className="bg-gray-900 border border-pink-900 neon-border-pink">
-            <CardHeader>
-              <CardTitle className="text-pink-300">Game History</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b border-gray-800">
-                      <th className="text-left py-3 px-2">Date</th>
-                      <th className="text-left py-3 px-2">Choice</th>
-                      <th className="text-left py-3 px-2">Result</th>
-                      <th className="text-left py-3 px-2">Stake</th>
-                      <th className="text-left py-3 px-2">Outcome</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {mockGameHistory.map((game) => (
-                      <tr key={game.id} className="border-b border-gray-800">
-                        <td className="py-3 px-2">{game.date}</td>
-                        <td className="py-3 px-2 capitalize">{game.choice}</td>
-                        <td className="py-3 px-2 capitalize">{game.result}</td>
-                        <td className="py-3 px-2">{game.stake} ETH</td>
-                        <td
-                          className={`py-3 px-2 capitalize ${
-                            game.outcome === "win" ? "text-green-500" : "text-red-500"
-                          }`}
-                        >
-                          {game.outcome}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
         </motion.div>
       </main>
     </div>

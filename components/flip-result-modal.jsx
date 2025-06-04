@@ -2,7 +2,7 @@
 
 import { useEffect } from "react"
 import { motion, AnimatePresence } from "framer-motion"
-import { CheckCircle, XCircle, Share2, Repeat } from "lucide-react"
+import { CheckCircle, XCircle, Repeat } from "lucide-react"
 import confetti from "canvas-confetti"
 
 export default function FlipResultModal({ result, stakeAmount, onClose }) {
@@ -10,7 +10,6 @@ export default function FlipResultModal({ result, stakeAmount, onClose }) {
 
   useEffect(() => {
     if (isWin) {
-      // Trigger confetti on win
       confetti({
         particleCount: 100,
         spread: 70,
@@ -83,17 +82,7 @@ export default function FlipResultModal({ result, stakeAmount, onClose }) {
                 Play Again
               </motion.button>
 
-              <motion.button
-                className="w-full px-4 py-3 rounded-lg font-bold bg-gray-800 hover:bg-gray-700 text-white flex items-center justify-center gap-2"
-                whileHover={{ scale: 1.02 }}
-                whileTap={{ scale: 0.98 }}
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.6 }}
-              >
-                <Share2 className="h-5 w-5" />
-                Share Result
-              </motion.button>
+          
             </div>
           </div>
         </motion.div>
